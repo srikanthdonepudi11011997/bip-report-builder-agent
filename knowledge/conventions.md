@@ -114,7 +114,7 @@ Add rows here (and in `sql_lint.py` `FORBIDDEN_OBJECTS`) when the debugger learn
 
 | Token | Meaning | How to find yours |
 |---|---|---|
-| `{{CLIENT_CONTACT_ROLE_ID}}` | `PROJECT_ROLE_ID` of the project role used for the external client contact on the project's *Parties* tab. In many implementations this is a custom role, e.g. "EXT-Client". | `SELECT project_role_id, project_role_name FROM pjf_proj_role_types_tl WHERE language = USERENV('LANG') ORDER BY 2` |
+| `{{CLIENT_CONTACT_ROLE_ID}}` | `PROJECT_ROLE_ID` of the project role used for the external client contact on the project's *Parties* tab. Often a custom role created for external client contacts. | `SELECT project_role_id, project_role_name FROM pjf_proj_role_types_tl WHERE language = USERENV('LANG') ORDER BY 2` |
 | `{{PROJECT_MANAGER_ROLE_ID}}` | `PROJECT_ROLE_ID` of the *Project Manager* role | Same query |
 | `{{LABOR_CATEGORY_ID}}` | ID of the labor category / expenditure category used to isolate labor cost | Ask your PPM functional lead, or query the expenditure category table in DEV |
 | `{{TASK_DFF_<NAME>}}` | `ATTRIBUTEn` column holding a task-level DFF segment (e.g. a billing classification code) | Setup and Maintenance → Manage Project Task Descriptive Flexfields, or the discovery query in `tables/ppm.md` |
