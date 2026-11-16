@@ -2,24 +2,29 @@
    Report      : RPT-PPM-001  Project Task Listing
    Data model  : RPT-PPM-001_DM   Data set: DS_PROJECT_TASKS
    Data source : ApplicationDB_FSCM
-   Version     : 0.1   (2026-11-15)
+   Version     : 0.2   (2026-11-15)
    Author      : BIP Report Builder Agent (draft) - review before use
    Grain       : one row per project task
-   Spec        : 02-spec.json
+   Spec        : 02-spec.json   Explained: 04a-sql-explained.md
    ---------------------------------------------------------------------
+   Source tags (conventions C-14):
+     [ORACLE_DOCS rel] docs.oracle.com, cached in knowledge/oracle-docs/
+     [CONFIG_DOC f > s] configuration docs (docs-library/)
+     [KB] knowledge base / lessons learned    [VERIFY] not yet confirmed
    Environment tokens {{...}} must be resolved from private/environment.md
    before running in DEV (sql_lint BIP007).
-   VERIFY markers = columns to confirm with the discovery queries in
-   03-discovery.md.
    ---------------------------------------------------------------------
    Change log:
      0.1  2026-11-15  Initial generation from fsd-input.md v1.0
+     0.2  2026-11-15  Objects confirmed on Oracle Docs; billing code
+                      resolved to ATTRIBUTE1 (global) from config docs
    ===================================================================== */
 WITH
 -- ---------------------------------------------------------------------
 -- CTE: projects - driving set of non-template projects, filtered by the
 --      BU / project / status / start-date parameters
 --      (grain: one row per project)
+-- Sources: PJF_PROJECTS_ALL_B [ORACLE_DOCS 25D]; FUN_ALL_BUSINESS_UNITS_V [ORACLE_DOCS 25D]
 -- ---------------------------------------------------------------------
 projects AS (
     SELECT prj.project_id,
@@ -39,6 +44,7 @@ projects AS (
 ),
 -- ---------------------------------------------------------------------
 -- CTE: project_names - translated project name (grain: one row per project)
+-- Sources: PJF_PROJECTS_ALL_TL [ORACLE_DOCS 25D, via audit-table page]
 -- ---------------------------------------------------------------------
 project_names AS (
     SELECT ptl.project_id,
@@ -48,7 +54,8 @@ project_names AS (
 ),
 -- ---------------------------------------------------------------------
 -- CTE: project_status - translated status name (grain: one row per status code)
--- VERIFY: PROJECT_STATUS_NAME column name (03-discovery.md D-2)
+-- Sources: PJF_PROJECT_STATUSES_TL [ORACLE_DOCS 25A: code + language];
+--          PROJECT_STATUS_NAME [VERIFY - discovery D-2]
 -- ---------------------------------------------------------------------
 project_status AS (
     SELECT pst.project_status_code,
@@ -61,6 +68,8 @@ project_status AS (
 --      dedupe key : project_id
 --      tie-break  : latest start_date_active, then highest project_party_id
 --      (grain: one row per project where rn = 1)
+-- Sources: PJF_PROJECT_PARTIES [ORACLE_DOCS 25C]; PER_PERSON_NAMES_F [ORACLE_DOCS];
+--          name_type = 'GLOBAL' [KB L-003]; role ID token [private/environment.md]
 -- ---------------------------------------------------------------------
 project_manager AS (
     SELECT pp.project_id,
@@ -84,7 +93,9 @@ project_manager AS (
 --      Blank when no client-contact party is assigned on the Parties tab.
 --      dedupe key : project_id
 --      tie-break  : latest start_date_active, then highest project_party_id
---      VERIFY: RESOURCE_SOURCE_ID -> contact person vs organization (Q-5, D-4)
+-- Sources: PJF_PROJECT_PARTIES [ORACLE_DOCS 25C]; HZ_PARTIES [ORACLE_DOCS];
+--          "Client Contact" role [CONFIG_DOC sample-ppm-dff-configuration.md > 2. Project Roles];
+--          contact person vs organization [VERIFY - Q-5, D-4]
 -- ---------------------------------------------------------------------
 project_client AS (
     SELECT pp.project_id,
@@ -102,14 +113,16 @@ project_client AS (
 -- ---------------------------------------------------------------------
 -- CTE: tasks - tasks of the driving projects with the billing-code DFF (BR-4)
 --      (grain: one row per task)
---      VERIFY: CHARGEABLE_FLAG column name (03-discovery.md D-3)
+-- Sources: PJF_TASKS_V incl. CHARGEABLE_FLAG, ATTRIBUTE1..15 [ORACLE_DOCS 26A];
+--          Billing Code = ATTRIBUTE1, Global Data Elements (no context filter needed)
+--          [CONFIG_DOC sample-ppm-dff-configuration.md > 1. Project Task Descriptive Flexfield]
 -- ---------------------------------------------------------------------
 tasks AS (
     SELECT tsk.project_id,
            tsk.task_id,
            tsk.task_number,
            tsk.task_name,
-           tsk.{{TASK_DFF_BILLING_CODE}} AS billing_code,                         -- environment-specific DFF segment (L-002, Q-3)
+           tsk.attribute1          AS billing_code,                               -- {{TASK_DFF_BILLING_CODE}} = ATTRIBUTE1 (global)
            tsk.chargeable_flag
     FROM   pjf_tasks_v tsk
     WHERE  tsk.project_id IN (SELECT p.project_id FROM projects p)

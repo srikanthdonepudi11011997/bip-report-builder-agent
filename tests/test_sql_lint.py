@@ -189,8 +189,8 @@ def test_example_data_model_has_no_errors():
     sql = (EXAMPLE_DIR / "04-data-model.sql").read_text(encoding="utf-8")
     findings = lint_sql(sql, spec)
     assert [f for f in findings if f.severity == ERROR] == []
-    # the public example intentionally leaves its 3 environment tokens unresolved
-    assert rules(findings) == ["BIP007"] * 3
+    # the public example leaves its 2 role-ID tokens unresolved (IDs are instance-specific)
+    assert rules(findings) == ["BIP007"] * 2
 
 
 def test_example_lov_queries_have_no_errors():
@@ -225,7 +225,7 @@ def test_cli_strict_and_list_rules(tmp_path, capsys):
 def test_cli_with_spec(capsys):
     rc = sql_lint.main([str(EXAMPLE_DIR / "04-data-model.sql"), "--spec", str(EXAMPLE_DIR / "02-spec.json")])
     assert rc == 0
-    assert "0 error(s), 3 warning(s)" in capsys.readouterr().out
+    assert "0 error(s), 2 warning(s)" in capsys.readouterr().out
 
 
 @pytest.mark.parametrize("rule", sorted(sql_lint.RULES))

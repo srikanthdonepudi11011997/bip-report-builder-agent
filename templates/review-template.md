@@ -10,6 +10,13 @@
 | ID | Assumption | Reason |
 |---|---|---|
 
+## 🔎 Sources used
+| Source | What it confirmed |
+|---|---|
+| Oracle Docs (`knowledge/oracle-docs/`) | objects / columns confirmed, releases |
+| Configuration docs | DFF mappings, lookups, roles (with file > section) |
+| Knowledge base | conventions, lessons applied |
+
 ## 🟡 VERIFY items (run the discovery queries in `03-discovery.md`)
 | Field | Candidate | Discovery query |
 |---|---|---|

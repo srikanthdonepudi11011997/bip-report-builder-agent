@@ -28,7 +28,7 @@ List projects and their tasks with the current project manager, client and task 
 | A-4 | Assumption | Status shows name, filters on code | — |
 | Q-1 | Question | Include projects with no tasks? | No |
 | Q-2 | Question | Default status = Active? | **Yes** |
-| Q-3 | Question | Billing Code DFF segment / context? | **Yes** |
+| A-5 | Assumption | Billing Code = PJF_TASKS_V.ATTRIBUTE1, global segment [CONFIG_DOC] (was Q-3) | — |
 | Q-4 | Question | Apply BU data security? | No |
 | Q-5 | Question | Client contact person vs organization? | No |
 
@@ -45,16 +45,16 @@ List projects and their tasks with the current project manager, client and task 
 `ApplicationDB_FSCM`, one SQL data set `DS_PROJECT_TASKS` (`04-data-model.sql`).
 
 ### 4.3 Source tables and views
-| Table / view | Purpose | Join | Confidence |
+| Table / view | Purpose | Join | Source |
 |---|---|---|---|
-| PJF_PROJECTS_ALL_B | Driving projects | — | HIGH |
-| FUN_ALL_BUSINESS_UNITS_V | BU name | `bu_id = prj.org_id` | HIGH |
-| PJF_PROJECTS_ALL_TL | Project name | `project_id`, language | HIGH |
-| PJF_PROJECT_STATUSES_TL | Status name | `project_status_code`, language | VERIFY |
-| PJF_PROJECT_PARTIES | PM and client contact | `project_id`, role ID | HIGH |
-| PER_PERSON_NAMES_F | PM name | `person_id = resource_source_id`, GLOBAL, effective | HIGH |
-| HZ_PARTIES | Client name | `party_id = resource_source_id` | VERIFY |
-| PJF_TASKS_V | Tasks, billing code DFF, chargeable flag | `project_id` | HIGH / VERIFY |
+| PJF_PROJECTS_ALL_B | Driving projects | — | [ORACLE_DOCS 25D](https://docs.oracle.com/en/cloud/saas/project-management/25d/oedpp/pjfprojectsallb-17373.html) |
+| FUN_ALL_BUSINESS_UNITS_V | BU name | `bu_id = prj.org_id` | [ORACLE_DOCS 25D](https://docs.oracle.com/en/cloud/saas/financials/25d/oedmf/funallbusinessunitsv-5127.html) |
+| PJF_PROJECTS_ALL_TL | Project name | `project_id`, language | [ORACLE_DOCS 25D](https://docs.oracle.com/en/cloud/saas/project-management/25d/oedpp/pjfprojectsalltl-20636.html) (audit-table page) |
+| PJF_PROJECT_STATUSES_TL | Status name | `project_status_code`, language | [ORACLE_DOCS 25A](https://docs.oracle.com/en/cloud/saas/project-management/25a/oedpp/pjfprojectstatusestl-10733.html); name column VERIFY (D-2) |
+| PJF_PROJECT_PARTIES | PM and client contact | `project_id`, role ID | [ORACLE_DOCS 25C](https://docs.oracle.com/en/cloud/saas/project-management/25c/oedpp/pjfprojectparties-25874.html) |
+| PER_PERSON_NAMES_F | PM name | `person_id = resource_source_id`, GLOBAL, effective | [ORACLE_DOCS](https://docs.oracle.com/en/cloud/saas/human-resources/oedmh/perpersonnamesf-32501.html) |
+| HZ_PARTIES | Client name | `party_id = resource_source_id` | [ORACLE_DOCS](https://docs.oracle.com/en/cloud/saas/sales/oedms/hzparties-19213.html); person vs org VERIFY (Q-5) |
+| PJF_TASKS_V | Tasks, billing code DFF (ATTRIBUTE1), chargeable flag | `project_id` | [ORACLE_DOCS 26A](https://docs.oracle.com/en/cloud/saas/project-management/26a/oedpp/pjftasksv-8362.html) + [CONFIG_DOC sample-ppm-dff-configuration.md > 1. Project Task Descriptive Flexfield] |
 
 ### 4.4 Query structure (CTEs)
 | CTE | Business concept | Grain | Notes |
@@ -92,7 +92,7 @@ See `05-lov-queries.sql` and `06-data-model-params.md`. Project Number cascades 
 | 7 | Client Name | CLIENT_NAME | HZ_PARTIES.PARTY_NAME | text |
 | 8 | Task Number | TASK_NUMBER | PJF_TASKS_V.TASK_NUMBER | text |
 | 9 | Task Name | TASK_NAME | PJF_TASKS_V.TASK_NAME | text |
-| 10 | Billing Code | BILLING_CODE | PJF_TASKS_V.`<task DFF segment>` | text |
+| 10 | Billing Code | BILLING_CODE | PJF_TASKS_V.ATTRIBUTE1 (Billing Code DFF, global) | text |
 | 11 | Chargeable | CHARGEABLE_FLAG | PJF_TASKS_V.CHARGEABLE_FLAG | Y/N |
 
 ### 4.8 Business rules → implementation

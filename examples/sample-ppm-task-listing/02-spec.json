@@ -129,12 +129,12 @@
     { "id": "A-1", "text": "Projects with no tasks are excluded (inner join to tasks).", "reason": "Grain is one row per task and the sample output shows only task rows. Confirm via Q-1." },
     { "id": "A-2", "text": "'Active projects' (rule 4) is NOT hard-coded; the Project Status parameter controls status.", "reason": "Hard-coding would conflict with the multi-select status parameter. Confirm via Q-2." },
     { "id": "A-3", "text": "'Current' project manager = party assignment active on the run date (SYSDATE).", "reason": "FSD has no as-of date parameter." },
-    { "id": "A-4", "text": "Project Status displays the translated status name; the parameter filters on status code.", "reason": "Standard LOV display/value pattern." }
+    { "id": "A-4", "text": "Project Status displays the translated status name; the parameter filters on status code.", "reason": "Standard LOV display/value pattern." },
+    { "id": "A-5", "text": "Billing Code = PJF_TASKS_V.ATTRIBUTE1, Global Data Elements context (no ATTRIBUTE_CATEGORY filter).", "reason": "Stated in configuration docs: sample-ppm-dff-configuration.md > 1. Project Task Descriptive Flexfield; ATTRIBUTE1 confirmed on PJF_TASKS_V by Oracle Docs 26A. Was open question Q-3." }
   ],
   "open_questions": [
     { "id": "Q-1", "question": "Should projects with no tasks appear (with blank task columns)?", "impact": "Inner vs left join to tasks; row counts.", "blocking": false, "fsd_reference": "Section 4/6" },
     { "id": "Q-2", "question": "Rule 4 says 'active projects' but Project Status is a parameter. Should the default be 'Active' only, or all statuses?", "impact": "Default parameter value and row counts.", "blocking": true, "fsd_reference": "Section 5 rule 4" },
-    { "id": "Q-3", "question": "Is the task 'Billing Code' DFF segment global, or context-dependent? Which ATTRIBUTEn holds it?", "impact": "Wrong values if the wrong segment/context is used (lessons-learned L-002).", "blocking": true, "fsd_reference": "Section 4 col 10" },
     { "id": "Q-4", "question": "Should users only see projects in BUs they have access to (data security)?", "impact": "BIP SQL does not apply Fusion data security; would need a security join.", "blocking": false, "fsd_reference": "Section 7" },
     { "id": "Q-5", "question": "Client Name: should it show the client contact person, or the client organization the contact belongs to?", "impact": "Join from PJF_PROJECT_PARTIES.RESOURCE_SOURCE_ID to HZ_PARTIES may return the contact person; the organization needs an HZ_RELATIONSHIPS hop.", "blocking": false, "fsd_reference": "Section 4 col 7" }
   ]
