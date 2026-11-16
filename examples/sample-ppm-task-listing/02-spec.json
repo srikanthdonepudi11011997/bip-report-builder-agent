@@ -1,0 +1,141 @@
+{
+  "report_id": "RPT-PPM-001",
+  "title": "Project Task Listing",
+  "module": "PPM",
+  "version": "0.1",
+  "source_document": "fsd-input.md (v1.0)",
+  "purpose": "List projects and their tasks with the current project manager, client and task billing code, for the weekly project review and billing-code setup checks.",
+  "audience": "PMO, Project Accountants",
+  "frequency": "On demand",
+  "output_formats": ["Excel", "PDF"],
+  "expected_grain": "one row per project task",
+  "parameters": [
+    {
+      "name": "Business Unit",
+      "bind": ":p_business_unit",
+      "label": "Business Unit",
+      "type": "string",
+      "multi_select": true,
+      "required": false,
+      "default": null,
+      "lov": { "name": "LOV_BUSINESS_UNIT", "description": "Business unit names" },
+      "filters_column": "BUSINESS_UNIT"
+    },
+    {
+      "name": "Project Number",
+      "bind": ":p_project_number",
+      "label": "Project Number",
+      "type": "string",
+      "multi_select": true,
+      "required": false,
+      "default": null,
+      "lov": { "name": "LOV_PROJECT_NUMBER", "description": "Non-template project numbers, cascaded on selected business units" },
+      "filters_column": "PROJECT_NUMBER"
+    },
+    {
+      "name": "Project Status",
+      "bind": ":p_project_status",
+      "label": "Project Status",
+      "type": "string",
+      "multi_select": true,
+      "required": false,
+      "default": null,
+      "lov": { "name": "LOV_PROJECT_STATUS", "description": "Display = status name, value = status code" },
+      "filters_column": "PROJECT_STATUS"
+    },
+    {
+      "name": "Project Manager",
+      "bind": ":p_project_manager",
+      "label": "Project Manager",
+      "type": "string",
+      "multi_select": true,
+      "required": false,
+      "default": null,
+      "lov": { "name": "LOV_PROJECT_MANAGER", "description": "Display = person name, value = person ID as text" },
+      "filters_column": "PROJECT_MANAGER",
+      "compare_to_numeric_column": true,
+      "notes": "LOV returns person_id as text; compare with TO_CHAR(person_id) (C-03)."
+    },
+    {
+      "name": "Project Start Date From",
+      "bind": ":p_start_date_from",
+      "label": "Project Start Date From",
+      "type": "date",
+      "multi_select": false,
+      "required": false,
+      "default": null,
+      "lov": null,
+      "filters_column": "PROJECT_START_DATE"
+    },
+    {
+      "name": "Project Start Date To",
+      "bind": ":p_start_date_to",
+      "label": "Project Start Date To",
+      "type": "date",
+      "multi_select": false,
+      "required": false,
+      "default": null,
+      "lov": null,
+      "filters_column": "PROJECT_START_DATE"
+    },
+    {
+      "name": "Chargeable Tasks Only",
+      "bind": ":p_chargeable_only",
+      "label": "Chargeable Tasks Only",
+      "type": "string",
+      "multi_select": false,
+      "required": false,
+      "default": "N",
+      "lov": { "name": "LOV_YES_NO", "description": "Static Y / N", "static_values": ["Y", "N"] },
+      "filters_column": "CHARGEABLE_FLAG"
+    }
+  ],
+  "columns": [
+    { "seq": 1,  "alias": "BUSINESS_UNIT",      "header": "Business Unit",      "data_type": "string", "source_hint": "Project business unit" },
+    { "seq": 2,  "alias": "PROJECT_NUMBER",     "header": "Project Number",     "data_type": "string" },
+    { "seq": 3,  "alias": "PROJECT_NAME",       "header": "Project Name",       "data_type": "string" },
+    { "seq": 4,  "alias": "PROJECT_STATUS",     "header": "Project Status",     "data_type": "string", "source_hint": "Status as shown on the project" },
+    { "seq": 5,  "alias": "PROJECT_START_DATE", "header": "Project Start Date", "data_type": "date", "format": "DD-MON-YYYY" },
+    { "seq": 6,  "alias": "PROJECT_MANAGER",    "header": "Project Manager",    "data_type": "string", "source_hint": "Current project manager" },
+    { "seq": 7,  "alias": "CLIENT_NAME",        "header": "Client Name",        "data_type": "string", "source_hint": "Client contact on the project's Parties tab" },
+    { "seq": 8,  "alias": "TASK_NUMBER",        "header": "Task Number",        "data_type": "string" },
+    { "seq": 9,  "alias": "TASK_NAME",          "header": "Task Name",          "data_type": "string" },
+    { "seq": 10, "alias": "BILLING_CODE",       "header": "Billing Code",       "data_type": "string", "source_hint": "Task DFF 'Billing Code'" },
+    { "seq": 11, "alias": "CHARGEABLE_FLAG",    "header": "Chargeable",         "data_type": "flag" }
+  ],
+  "filters": [
+    { "id": "F-1", "description": "Exclude project templates", "always_applied": true },
+    { "id": "F-2", "description": "Chargeable Tasks Only = Y restricts to chargeable tasks", "always_applied": false }
+  ],
+  "business_rules": [
+    { "id": "BR-1", "description": "Exclude project templates.", "affects_columns": [] },
+    { "id": "BR-2", "description": "Show only the current project manager; if several, the most recent (latest start date).", "affects_columns": ["PROJECT_MANAGER"] },
+    { "id": "BR-3", "description": "Client name from the client contact on the project's Parties tab; blank when none is assigned.", "affects_columns": ["CLIENT_NAME"] },
+    { "id": "BR-4", "description": "Billing code from the task-level DFF segment (environment-specific mapping).", "affects_columns": ["BILLING_CODE"] }
+  ],
+  "grouping": ["PROJECT_NUMBER"],
+  "sorting": [
+    { "alias": "BUSINESS_UNIT", "direction": "ASC" },
+    { "alias": "PROJECT_NUMBER", "direction": "ASC" },
+    { "alias": "TASK_NUMBER", "direction": "ASC" }
+  ],
+  "security": {
+    "notes": "Report-level access only. BIP SQL does not apply Fusion PPM data security automatically.",
+    "roles": ["Project Accountant", "PMO Analyst"],
+    "data_security": "None requested in FSD (see Q-4)"
+  },
+  "reuse": [],
+  "assumptions": [
+    { "id": "A-1", "text": "Projects with no tasks are excluded (inner join to tasks).", "reason": "Grain is one row per task and the sample output shows only task rows. Confirm via Q-1." },
+    { "id": "A-2", "text": "'Active projects' (rule 4) is NOT hard-coded; the Project Status parameter controls status.", "reason": "Hard-coding would conflict with the multi-select status parameter. Confirm via Q-2." },
+    { "id": "A-3", "text": "'Current' project manager = party assignment active on the run date (SYSDATE).", "reason": "FSD has no as-of date parameter." },
+    { "id": "A-4", "text": "Project Status displays the translated status name; the parameter filters on status code.", "reason": "Standard LOV display/value pattern." }
+  ],
+  "open_questions": [
+    { "id": "Q-1", "question": "Should projects with no tasks appear (with blank task columns)?", "impact": "Inner vs left join to tasks; row counts.", "blocking": false, "fsd_reference": "Section 4/6" },
+    { "id": "Q-2", "question": "Rule 4 says 'active projects' but Project Status is a parameter. Should the default be 'Active' only, or all statuses?", "impact": "Default parameter value and row counts.", "blocking": true, "fsd_reference": "Section 5 rule 4" },
+    { "id": "Q-3", "question": "Is the task 'Billing Code' DFF segment global, or context-dependent? Which ATTRIBUTEn holds it?", "impact": "Wrong values if the wrong segment/context is used (lessons-learned L-002).", "blocking": true, "fsd_reference": "Section 4 col 10" },
+    { "id": "Q-4", "question": "Should users only see projects in BUs they have access to (data security)?", "impact": "BIP SQL does not apply Fusion data security; would need a security join.", "blocking": false, "fsd_reference": "Section 7" },
+    { "id": "Q-5", "question": "Client Name: should it show the client contact person, or the client organization the contact belongs to?", "impact": "Join from PJF_PROJECT_PARTIES.RESOURCE_SOURCE_ID to HZ_PARTIES may return the contact person; the organization needs an HZ_RELATIONSHIPS hop.", "blocking": false, "fsd_reference": "Section 4 col 7" }
+  ]
+}
