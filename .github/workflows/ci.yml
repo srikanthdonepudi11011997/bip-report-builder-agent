@@ -1,1 +1,36 @@
-.github/workflows/ci.yml
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Run tests
+        run: python -m pytest -v
+      - name: Validate example spec
+        run: python scripts/validate_spec.py examples/sample-ppm-task-listing/02-spec.json
+      - name: Lint example SQL
+        run: |
+          python scripts/sql_lint.py examples/sample-ppm-task-listing/04-data-model.sql \
+            --spec examples/sample-ppm-task-listing/02-spec.json
+          python scripts/sql_lint.py examples/sample-ppm-task-listing/05-lov-queries.sql
+      - name: Extract example FSD
+        run: python scripts/fsd_to_json.py examples/sample-ppm-task-listing/fsd-input.md -o /tmp/01-fsd-raw.json
+      - name: Index and search sample config docs
+        run: |
+          python scripts/docs_index.py --dir docs-library/samples ingest
+          python scripts/docs_index.py --dir docs-library/samples search "task billing code flexfield" -k 3
+          python scripts/docs_index.py --dir docs-library/samples dff --filter task
