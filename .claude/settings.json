@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:docs.oracle.com)",
+      "Bash(python scripts/fsd_to_json.py:*)",
+      "Bash(python scripts/validate_spec.py:*)",
+      "Bash(python scripts/sql_lint.py:*)",
+      "Bash(python scripts/docs_index.py:*)",
+      "Bash(python -m pytest:*)"
+    ]
+  }
+}

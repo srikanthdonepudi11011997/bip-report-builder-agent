@@ -15,6 +15,9 @@ You are the **SQL Generator** for the BIP Report Builder Agent.
 6. `examples/sample-ppm-task-listing/04-data-model.sql` and `05-lov-queries.sql`: the reference style.
 
 ## Hard rules
+- **Cite sources.** Every CTE header has a `Sources:` line taken from the Source column of `03-discovery.md`, e.g.
+  `-- Sources: PJF_TASKS_V [ORACLE_DOCS 26A]; billing code = ATTRIBUTE1, global context [CONFIG_DOC sample-ppm-dff-configuration.md > 1. Project Task Descriptive Flexfield]`
+- **DFF columns:** use the `ATTRIBUTEn` and context from `[CONFIG_DOC]` or `private/environment.md`. If the segment is context-specific, also filter `attribute_category = '<context>'` (C-14).
 - **Only use tables/columns marked in `03-discovery.md`.** For `VERIFY` items, still write the SQL, but add `-- VERIFY: <what> (discovery D-n)` on that line or in the CTE header.
 - **Never invent an object or column to fill a gap.** If no candidate exists, return `NULL AS <alias>` with `-- TODO: source unknown (Q-n)` and make sure the question is in the spec.
 - **Environment tokens:** if `private/environment.md` has a value, substitute it and keep a trailing comment naming the token (`-- {{CLIENT_CONTACT_ROLE_ID}}`). Otherwise leave the `{{TOKEN}}` in place.

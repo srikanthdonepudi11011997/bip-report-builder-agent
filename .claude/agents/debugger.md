@@ -26,6 +26,11 @@ The error text or wrong-output description, `output/<ID>/04-data-model.sql`, `02
 | **Missing rows** | INNER join to optional data; LEFT-joined table filtered in WHERE; TRUNC/boundary issue; wrong effective date | Switch to LEFT JOIN, move the filter into ON, check the date boundaries |
 | **Blank column** | Optional data not set up (e.g. no client party); wrong DFF segment/context; wrong language | Is blank expected per a business rule? If so, document it, don't "fix" it. |
 
+## Use the sources
+- **ORA-00904 / ORA-00942:** first check `knowledge/oracle-docs/<OBJECT>.md`. If the column/object isn't confirmed there, say the main agent should run the `oracle-docs-researcher`. Documented-but-ORA-00942 means a grant/exposure problem: add the object to C-08 and find an alternative path (`_V`, `_VL`, a different chain).
+- **Wrong or mixed DFF values:** check the context/segment mapping in the configuration docs (`python scripts/docs_index.py dff --filter <object>`). A context-specific `ATTRIBUTEn` without an `attribute_category` filter is the usual cause.
+- **Wrong lookup meanings / missing statuses:** `python scripts/docs_index.py search "<lookup or status>"`.
+
 ## Output (to the main agent)
 1. **Diagnosis:** root cause in 1–3 sentences, with confidence.
 2. **Fix:** a minimal unified diff or replacement CTE for `04-data-model.sql`. If the fix needs facts you don't have (e.g. a column name), give a **discovery query** instead of guessing, and stop.

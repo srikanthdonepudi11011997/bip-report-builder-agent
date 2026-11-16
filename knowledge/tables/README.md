@@ -7,10 +7,11 @@ Each module file (`ppm.md`, `hcm.md`, `ap-ar.md`, `gl.md`) lists Fusion tables a
 - **Joins**: proven join paths
 - **Gotchas**: things that have bitten us
 - **Confidence**:
+  - `ORACLE_DOCS <release>`: seen on the docs.oracle.com *Tables and Views* page (details in `../oracle-docs/<OBJECT>.md`)
   - `HIGH`: used in working BIP SQL
-  - `VERIFY`: believed correct but not yet confirmed in your environment. The agent must emit a discovery query before relying on it.
+  - `VERIFY`: believed correct but not yet confirmed. Before relying on it, the agent runs the `oracle-docs-researcher` or emits a discovery query.
 
-> **The agent may only use tables and columns listed here, in reuse SQL the user provided, or confirmed by the user.** Anything else gets a discovery query.
+> **The agent may only use tables and columns listed here, confirmed on Oracle Docs, in reuse SQL the user provided, or confirmed by the user.** Anything else gets a discovery query. What a DFF `ATTRIBUTEn` *means* is never in these notes; it comes from your configuration docs (`docs-library/`).
 
 ## Generic discovery queries
 

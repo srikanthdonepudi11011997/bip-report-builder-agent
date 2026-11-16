@@ -117,7 +117,7 @@ Add rows here (and in `sql_lint.py` `FORBIDDEN_OBJECTS`) when the debugger learn
 | `{{CLIENT_CONTACT_ROLE_ID}}` | `PROJECT_ROLE_ID` of the project role used for the external client contact on the project's *Parties* tab. Often a custom role created for external client contacts. | `SELECT project_role_id, project_role_name FROM pjf_proj_role_types_tl WHERE language = USERENV('LANG') ORDER BY 2` |
 | `{{PROJECT_MANAGER_ROLE_ID}}` | `PROJECT_ROLE_ID` of the *Project Manager* role | Same query |
 | `{{LABOR_CATEGORY_ID}}` | ID of the labor category / expenditure category used to isolate labor cost | Ask your PPM functional lead, or query the expenditure category table in DEV |
-| `{{TASK_DFF_<NAME>}}` | `ATTRIBUTEn` column holding a task-level DFF segment (e.g. a billing classification code) | Setup and Maintenance → Manage Project Task Descriptive Flexfields, or the discovery query in `tables/ppm.md` |
+| `{{TASK_DFF_<NAME>}}` | `ATTRIBUTEn` column holding a task-level DFF segment (e.g. a billing classification code) | Your configuration docs: `/ingest-docs` then `python scripts/docs_index.py dff --filter task`. Or Setup and Maintenance → Manage Descriptive Flexfields, or the discovery query in `tables/ppm.md`. |
 
 Important behavior notes:
 
@@ -135,3 +135,21 @@ Important behavior notes:
 - Each parameter with a LOV gets its own query in `05-lov-queries.sql`, headed `-- LOV: <lov_name> (for :p_x)`.
 - Return the display value. If display ≠ value, return two columns: `display`, `value`.
 - Return distinct values ordered by display. Apply `_TL` language filters. Exclude inactive or end-dated records unless the FSD asks for them.
+
+## C-14 Sources and citations
+
+Every table, column and environment value in a generated report carries a source:
+
+| Tag | Meaning | Used for |
+|---|---|---|
+| `[USER]` | Confirmed by the user in DEV (discovery output, fixed error) | anything |
+| `[CONFIG_DOC file > section]` | Stated in the organization's configuration docs (`scripts/docs_index.py`) | DFF segment → `ATTRIBUTEn` + context, value sets, lookups, custom roles/statuses, CoA segments |
+| `[ORACLE_DOCS release]` + URL | Listed on the docs.oracle.com *Tables and Views* page (cached in `knowledge/oracle-docs/`) | object existence, columns, PK/FK, view base tables |
+| `[KB]` | `knowledge/tables/*.md` / lessons learned | join patterns, gotchas |
+| `[VERIFY]` | Not confirmed | must have a discovery query in `03-discovery.md` |
+
+Rules:
+- `03-discovery.md` has a **Source** column. `04-data-model.sql` CTE headers have a `Sources:` line. `04a-sql-explained.md` lists every source.
+- **Precedence:** USER > CONFIG_DOC > ORACLE_DOCS > KB. A conflict between sources becomes an open question.
+- **DFF columns need both:** `[ORACLE_DOCS]` that the `ATTRIBUTEn` column exists on the object, and `[CONFIG_DOC]` (or `private/environment.md`) for what it means and under which context. If the segment is context-specific, add `AND <alias>.attribute_category = '<context>'`.
+- Oracle Docs never proves access. An object can be documented and still raise ORA-00942 in BIP (C-08).

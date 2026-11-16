@@ -9,7 +9,7 @@ See `README.md` for the confidence legend and generic discovery queries.
 - **Key columns:** PROJECT_ID (PK), SEGMENT1 (project number), ORG_ID (business unit), CARRYING_OUT_ORGANIZATION_ID (owning org), PROJECT_STATUS_CODE, PROJECT_TYPE_ID, START_DATE, COMPLETION_DATE, CLOSED_DATE, TEMPLATE_FLAG
 - **Joins:** `prj.org_id = bu.bu_id` (FUN_ALL_BUSINESS_UNITS_V); `prj.project_status_code = pst.project_status_code`; `prj.carrying_out_organization_id = org.organization_id`
 - **Gotchas:** Exclude templates with `NVL(prj.template_flag, 'N') = 'N'`. Project *name* is in the `_TL` / `_VL`.
-- **Confidence:** HIGH (PROJECT_ID, SEGMENT1, ORG_ID, PROJECT_STATUS_CODE, START_DATE, COMPLETION_DATE, TEMPLATE_FLAG); VERIFY (CLOSED_DATE, CARRYING_OUT_ORGANIZATION_ID in your release)
+- **Confidence:** ORACLE_DOCS 25D, all listed key columns incl. CLOSED_DATE and CARRYING_OUT_ORGANIZATION_ID (see `../oracle-docs/PJF_PROJECTS_ALL_B.md`)
 
 ### PJF_PROJECTS_ALL_TL / PJF_PROJECTS_ALL_VL
 - **Purpose / grain:** project name/description per language (`_TL`), or pre-joined base + TL (`_VL`).
@@ -20,7 +20,7 @@ See `README.md` for the confidence legend and generic discovery queries.
 ### PJF_PROJECT_STATUSES_TL
 - **Purpose / grain:** status display name per status code and language.
 - **Key columns:** PROJECT_STATUS_CODE, PROJECT_STATUS_NAME, LANGUAGE
-- **Confidence:** VERIFY (column names). Discovery: `SELECT * FROM pjf_project_statuses_tl WHERE language = USERENV('LANG') AND ROWNUM <= 20`
+- **Confidence:** ORACLE_DOCS 25A for PROJECT_STATUS_CODE + LANGUAGE; name column VERIFY. Discovery: `SELECT * FROM pjf_project_statuses_tl WHERE language = USERENV('LANG') AND ROWNUM <= 20`
 
 ### PJF_PROJECT_TYPES_TL
 - **Purpose / grain:** project type name per type ID and language.
@@ -36,7 +36,7 @@ See `README.md` for the confidence legend and generic discovery queries.
 - **Gotchas:**
   - Task DFF segments live in `ATTRIBUTEn`, and **the mapping is environment-specific and can be context-dependent**. Example from one implementation: a billing classification code in `ATTRIBUTE14`, while `ATTRIBUTE9` meant different things per context. Use the `{{TASK_DFF_<NAME>}}` token from `private/environment.md`; never guess the segment.
   - Task start/finish date column names vary by view and release. Confirm before use.
-- **Confidence:** HIGH (TASK_ID, PROJECT_ID, TASK_NUMBER, TASK_NAME, ATTRIBUTEn exist); VERIFY (date columns, CHARGEABLE_FLAG, BILLABLE_FLAG, TOP_TASK_ID)
+- **Confidence:** ORACLE_DOCS 26A: TASK_ID, PROJECT_ID, TASK_NUMBER, TASK_NAME, TOP_TASK_ID, PARENT_TASK_ID, CHARGEABLE_FLAG, BILLABLE_FLAG, START_DATE, COMPLETION_DATE, ATTRIBUTE_CATEGORY, ATTRIBUTE1-15 (see `../oracle-docs/PJF_TASKS_V.md`). DFF meaning: CONFIG_DOC only.
 - **Discovery:** `SELECT column_name FROM all_tab_columns WHERE table_name = 'PJF_TASKS_V' AND (column_name LIKE '%DATE%' OR column_name LIKE '%FLAG%') ORDER BY 1`
 
 ## Project parties (manager, client contact, team)
@@ -53,7 +53,7 @@ See `README.md` for the confidence legend and generic discovery queries.
   - **Client name only populates when a client-contact party is assigned** on the project's Parties tab, so expect NULLs.
   - Several rows can be active per role → dedupe with `ROW_NUMBER()` (C-07), latest `START_DATE_ACTIVE` first.
   - Whether `RESOURCE_SOURCE_ID` points at the contact *person* party or the customer *organization* party depends on how the party was added. If you need the organization name and get a person's name, follow HZ_RELATIONSHIPS from the person party to its organization. Confirm in DEV.
-- **Confidence:** HIGH (PROJECT_ID, PROJECT_ROLE_ID, RESOURCE_SOURCE_ID, START/END_DATE_ACTIVE); VERIFY (what RESOURCE_SOURCE_ID resolves to for external parties in your setup)
+- **Confidence:** ORACLE_DOCS 25C, all 21 columns incl. RELATIONSHIP_ID (see `../oracle-docs/PJF_PROJECT_PARTIES.md`); VERIFY what RESOURCE_SOURCE_ID resolves to for external parties in your setup
 - **Discovery:**
   ```sql
   SELECT pp.project_id, pp.project_role_id, rt.project_role_name,

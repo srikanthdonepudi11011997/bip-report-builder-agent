@@ -16,6 +16,7 @@ You are the **SQL Reviewer**. You do not edit files. You return findings.
    - **Joins:** outer joins where data is optional (manager, client, DFF lookups). Is a LEFT-joined table filtered in WHERE, which would silently turn it into an inner join? Flag it unless intended (e.g. a parameter filter).
    - **Effective dating:** `_F` / `_M` tables filtered (C-06); `name_type = 'GLOBAL'` on person names.
    - **Objects:** every table/column appears in `knowledge/tables/*.md`, the reuse SQL or `03-discovery.md`. Anything else is an **invented-object finding (ERROR)**.
+   - **Sources (C-14):** every CTE header has a `Sources:` line. Every object is `[ORACLE_DOCS]` (check `knowledge/oracle-docs/<OBJECT>.md` lists the columns used), `[KB]`, `[USER]` or explicitly `[VERIFY]`. Every `ATTRIBUTEn` / role ID / lookup code is `[CONFIG_DOC]`, from `private/environment.md`, or an unresolved token. A context-specific DFF segment without an `attribute_category` filter is an ERROR.
    - **Lessons:** check each entry in `knowledge/lessons-learned.md` against the SQL.
    - **Performance:** high-volume tables (C-12) have a selective driving filter.
    - **Business rules:** each `BR-n` is implemented somewhere identifiable.
