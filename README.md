@@ -101,7 +101,7 @@ flowchart LR
 | Sub-agents | `.claude/agents/` | `fsd-parser`, `sql-generator`, `sql-reviewer`, `doc-writer`, `debugger` |
 | Knowledge base | `knowledge/` | Conventions, table notes per module, lessons learned, past-report catalog |
 | Templates | `templates/` | Spec JSON Schema, TSD, test plan, IT CR, catalog entry, environment config |
-| Helpers | `scripts/` | `fsd_to_json.py` (docx/pdf/md → JSON), `sql_lint.py` (convention checks) |
+| Helpers | `scripts/` | `fsd_to_json.py` (docx/pdf/md → JSON), `validate_spec.py` (schema + cross-checks), `sql_lint.py` (convention checks) |
 | Private config | `private/` (gitignored) | Your role IDs, DFF segment mappings, anything environment-specific |
 
 ## Example
@@ -111,29 +111,33 @@ flowchart LR
 A taste of the generated SQL:
 
 ```sql
--- CTE: project_client — client contact via the project-parties chain
--- (PJF_PROJECT_CUSTOMERS is avoided: ORA-00942 in some environments, see lessons-learned L-001)
+-- CTE: project_client - client contact from the project-parties chain (BR-3)
+--      PJF_PROJECT_CUSTOMERS deliberately NOT used (ORA-00942, L-001).
+--      dedupe key : project_id   tie-break : latest start_date_active, project_party_id
 project_client AS (
     SELECT pp.project_id,
            hp.party_name AS client_name,
            ROW_NUMBER() OVER (PARTITION BY pp.project_id
-                              ORDER BY pp.start_date_active DESC) AS rn
+                              ORDER BY pp.start_date_active DESC,
+                                       pp.project_party_id  DESC) AS rn
     FROM   pjf_project_parties pp
     JOIN   hz_parties          hp ON hp.party_id = pp.resource_source_id
-    WHERE  pp.project_role_id = {{CLIENT_CONTACT_ROLE_ID}}   -- environment-specific
-    AND    TRUNC(SYSDATE) BETWEEN pp.start_date_active
-                              AND NVL(pp.end_date_active, TRUNC(SYSDATE))
-)
+    WHERE  pp.project_role_id = {{CLIENT_CONTACT_ROLE_ID}}        -- environment-specific
+    AND    TRUNC(SYSDATE) BETWEEN TRUNC(pp.start_date_active)
+                              AND NVL(TRUNC(pp.end_date_active), TRUNC(SYSDATE))
+),
 ...
-WHERE (COALESCE(:p_project_status, NULL) IS NULL OR prj.project_status_code IN (:p_project_status))
+-- multi-select null check (C-02) and TO_CHAR on a numeric ID (C-03)
+WHERE (COALESCE(:p_project_manager, NULL) IS NULL OR TO_CHAR(pm.pm_person_id) IN (:p_project_manager))
 ```
 
 ## Python helpers
 
 ```bash
 python scripts/fsd_to_json.py inputs/My_FSD.docx -o output/RPT-X/01-fsd-raw.json
+python scripts/validate_spec.py output/RPT-X/02-spec.json
 python scripts/sql_lint.py output/RPT-X/04-data-model.sql --spec output/RPT-X/02-spec.json
-python -m pytest -q                                  # run the tests
+pip install -r requirements-dev.txt && python -m pytest -q   # run the tests
 ```
 
 `sql_lint.py` checks these rules:
@@ -150,6 +154,7 @@ python -m pytest -q                                  # run the tests
 | BIP008 | Spec parameter not used in the SQL |
 | BIP009 | Bind variable not declared in the spec |
 | BIP010 | Hard-coded 15-digit Fusion ID without an explanatory comment |
+| BIP011 | Spec column alias missing from the SQL (FSD coverage) |
 
 Run `python scripts/sql_lint.py --list-rules` for the full list.
 
