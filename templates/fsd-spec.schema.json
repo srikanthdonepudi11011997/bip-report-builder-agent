@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/bip-report-builder-agent/templates/fsd-spec.schema.json",
+  "title": "BIP Report Spec",
+  "description": "Structured spec parsed from an Oracle Fusion Functional Spec (FSD). Produced by the fsd-parser sub-agent; consumed by sql-generator, sql-reviewer and doc-writer.",
+  "type": "object",
+  "required": ["report_id", "title", "module", "purpose", "parameters", "columns", "assumptions", "open_questions"],
+  "additionalProperties": false,
+  "properties": {
+    "report_id": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+$", "description": "Report identifier from the FSD (e.g. RPT-PPM-001)." },
+    "title": { "type": "string" },
+    "module": { "type": "string", "enum": ["PPM", "HCM", "AP", "AR", "GL", "OTHER"] },
+    "version": { "type": "string", "default": "0.1" },
+    "source_document": { "type": "string", "description": "FSD file name and version." },
+    "purpose": { "type": "string" },
+    "audience": { "type": "string" },
+    "frequency": { "type": "string", "description": "e.g. On demand, Daily scheduled." },
+    "output_formats": { "type": "array", "items": { "type": "string", "enum": ["Excel", "PDF", "CSV", "HTML", "RTF", "XML"] } },
+    "parameters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "bind", "label", "type", "multi_select", "required"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "description": "Parameter name as written in the FSD." },
+          "bind": { "type": "string", "pattern": "^:p_[a-z0-9_]+$" },
+          "label": { "type": "string", "description": "Prompt shown to the user in BIP." },
+          "type": { "type": "string", "enum": ["string", "number", "date", "boolean"] },
+          "multi_select": { "type": "boolean" },
+          "required": { "type": "boolean" },
+          "default": { "type": ["string", "null"], "description": "Literal default or expression such as SYSDATE / {$SYSDATE()$}." },
+          "lov": {
+            "type": ["object", "null"],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string", "pattern": "^LOV_[A-Z0-9_]+$" },
+              "description": { "type": "string" },
+              "static_values": { "type": "array", "items": { "type": "string" } }
+            }
+          },
+          "filters_column": { "type": "string", "description": "Output column alias or source field this parameter filters." },
+          "compare_to_numeric_column": { "type": "boolean", "description": "True when the LOV returns strings but the filtered column is numeric (TO_CHAR rule C-03)." },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "columns": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["seq", "alias", "header"],
+        "additionalProperties": false,
+        "properties": {
+          "seq": { "type": "integer", "minimum": 1 },
+          "alias": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$", "description": "SQL alias / XML element name." },
+          "header": { "type": "string", "description": "Column header in the output." },
+          "description": { "type": "string" },
+          "source_hint": { "type": "string", "description": "What the FSD says about the source (screen name, navigation, field)." },
+          "data_type": { "type": "string", "enum": ["string", "number", "date", "currency", "flag"] },
+          "format": { "type": "string", "description": "e.g. DD-MON-YYYY, #,##0.00" }
+        }
+      }
+    },
+    "filters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "description"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^F-[0-9]+$" },
+          "description": { "type": "string" },
+          "always_applied": { "type": "boolean" }
+        }
+      }
+    },
+    "business_rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "description"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^BR-[0-9]+$" },
+          "description": { "type": "string" },
+          "affects_columns": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "grouping": { "type": "array", "items": { "type": "string" }, "description": "Column aliases to group/break on in the layout." },
+    "sorting": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["alias"],
+        "additionalProperties": false,
+        "properties": {
+          "alias": { "type": "string" },
+          "direction": { "type": "string", "enum": ["ASC", "DESC"], "default": "ASC" }
+        }
+      }
+    },
+    "expected_grain": { "type": "string", "description": "One row per ... (drives de-duplication)." },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "notes": { "type": "string" },
+        "roles": { "type": "array", "items": { "type": "string" } },
+        "data_security": { "type": "string" }
+      }
+    },
+    "reuse": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["source", "what"],
+        "additionalProperties": false,
+        "properties": { "source": { "type": "string" }, "what": { "type": "string" } }
+      }
+    },
+    "sample_output": { "type": "array", "items": { "type": "object" } },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "text"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^A-[0-9]+$" },
+          "text": { "type": "string" },
+          "reason": { "type": "string" }
+        }
+      }
+    },
+    "open_questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "question", "blocking"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^Q-[0-9]+$" },
+          "question": { "type": "string" },
+          "impact": { "type": "string" },
+          "blocking": { "type": "boolean" },
+          "fsd_reference": { "type": "string" }
+        }
+      }
+    }
+  }
+}
