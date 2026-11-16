@@ -1,0 +1,32 @@
+# --- Generated deliverables (never commit real report output) ---
+output/*
+!output/.gitkeep
+
+# --- Your real FSDs / inputs (company-confidential) ---
+inputs/*
+!inputs/.gitkeep
+
+# --- Private, environment-specific config (role IDs, DFF mappings, names) ---
+private/*
+!private/README.md
+.env
+*.env
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+.coverage
+htmlcov/
+
+# --- Editors / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- Claude Code local settings ---
+.claude/settings.local.json
