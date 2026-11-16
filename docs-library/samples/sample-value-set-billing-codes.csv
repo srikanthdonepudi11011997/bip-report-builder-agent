@@ -1,0 +1,5 @@
+Value Set,Value,Description,Enabled,Start Date,End Date
+EX_TASK_BILLING_CODE,BC-100,Discovery and analysis,Y,2024-01-01,
+EX_TASK_BILLING_CODE,BC-200,Build and configuration,Y,2024-01-01,
+EX_TASK_BILLING_CODE,BC-300,Testing,Y,2024-01-01,
+EX_TASK_BILLING_CODE,BC-900,Legacy - do not use,N,2020-01-01,2023-12-31

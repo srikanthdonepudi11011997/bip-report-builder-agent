@@ -30,3 +30,9 @@ Thumbs.db
 
 # --- Claude Code local settings ---
 .claude/settings.local.json
+
+# --- Configuration-docs library (your setup docs are company-confidential) ---
+docs-library/*
+!docs-library/README.md
+!docs-library/samples/
+docs-library/samples/.index/
